@@ -25,23 +25,23 @@ load_lab_env(ROOT)
 
 TRANSCRIPTS_DIR = ROOT / "transcripts"
 
-st.set_page_config(page_title="Promiscuity — Research Agent", layout="wide", page_icon="🟣")
+st.set_page_config(page_title="chaotic — Research Agent", layout="wide", page_icon="🟣")
 
 
 # ==================================================================
-# BRAND — "Promiscuity":
+# BRAND — "chaotic":
 # Mark: 6 cánh gradient tím xoay quanh lõi trắng, gợi ống kính/aperture.
 # ==================================================================
 LOGO_MARK_SVG = """
 <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}">
   <defs>
-    <linearGradient id="PromiscuityGrad{uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="chaoticGrad{uid}" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#A78BFA"/>
       <stop offset="55%" stop-color="#7C3AED"/>
       <stop offset="100%" stop-color="#5B21B6"/>
     </linearGradient>
   </defs>
-  <g fill="url(#PromiscuityGrad{uid})">
+  <g fill="url(#chaoticGrad{uid})">
     <g transform="translate(32,32)">
       <ellipse cx="0" cy="-13.5" rx="7.2" ry="13.5"/>
       <ellipse cx="0" cy="-13.5" rx="7.2" ry="13.5" transform="rotate(60)"/>
@@ -52,7 +52,7 @@ LOGO_MARK_SVG = """
     </g>
   </g>
   <circle cx="32" cy="32" r="9.5" fill="#FFFFFF"/>
-  <circle cx="32" cy="32" r="9.5" fill="none" stroke="url(#PromiscuityGrad{uid})" stroke-width="2"/>
+  <circle cx="32" cy="32" r="9.5" fill="none" stroke="url(#chaoticGrad{uid})" stroke-width="2"/>
 </svg>
 """
 
@@ -65,7 +65,7 @@ def logo_mark(size: int = 40, uid: str = "a") -> str:
 # DESIGN SYSTEM — nền trắng / tím, gradient nhẹ ở card (kiểu answer-engine
 # / dev-platform chuyên nghiệp: You.com, Perplexity, Linear). Tiêu đề vẫn
 # giữ serif biên tập để giữ cảm giác "nghiên cứu", accent chuyển sang tím
-# thương hiệu "Promiscuity".
+# thương hiệu "chaotic".
 # ==================================================================
 TOKENS = {
     "bg": "#FFFFFF",
@@ -274,7 +274,7 @@ st.markdown(
 # ------------------------------------------------------------------
 # Sidebar — brand + cấu hình + evidence kỹ thuật (vẫn giữ đủ cho eval/demo)
 # ------------------------------------------------------------------
-st.sidebar.markdown("### 🟣 Promiscuity")
+st.sidebar.markdown("### 🟣 chaotic")
 st.sidebar.caption("research, in focus")
 
 st.sidebar.markdown("##### ⚙️ Cấu hình phiên")
@@ -534,7 +534,7 @@ with main_col:
             <div class="rt-hero">
                 <div class="rt-hero-mark">{logo_mark(56, uid="hero")}</div>
                 <h1>Hỏi bất cứ điều gì</h1>
-                <p>Promiscuity tra cứu web, mạng xã hội và tài liệu để trả lời có nguồn trích dẫn rõ ràng.</p>
+                <p>chaotic tra cứu web, mạng xã hội và tài liệu để trả lời có nguồn trích dẫn rõ ràng.</p>
             </div>
             """,
             unsafe_allow_html=True,
