@@ -97,7 +97,8 @@ st.markdown(
         background: {TOKENS["sidebar_bg"]};
         border-right: 1px solid {TOKENS["border"]};
     }}
-    #MainMenu, footer, header[data-testid="stHeader"] {{ visibility: hidden; height: 0; }}
+    #MainMenu, footer {{ display: none; }}
+    button[kind="header"] {{ visibility: visible; }}
 
     .rt-brand {{
         display: flex;
