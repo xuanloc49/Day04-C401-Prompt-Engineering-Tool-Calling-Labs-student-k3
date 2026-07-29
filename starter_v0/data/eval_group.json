@@ -1,7 +1,7 @@
 {
   "dataset_id": "day04_v2_research_group",
   "dataset_role": "group",
-  "description": "10 team eval cases (5 single-turn + 5 multi-turn) for Anthropic-primary setup. Covers wikipedia_summary, fetch_rss, papers, policy, paper_text, clarify boundary, and no-tool cases. timeline/social_search excluded (disabled without RAPIDAPI_KEY).",
+  "description": "10 team eval cases (5 single-turn + 5 multi-turn). Covers wikipedia_summary, fetch_rss, lookup query extraction, papers, policy, paper_text, clarify boundary, and no-tool cases. Harder distractors: fetch vs fetch_rss, wikipedia vs lookup/papers, clean lookup query (prompt v3 rule), send trap on out-of-scope. timeline/social_search excluded (disabled without RAPIDAPI_KEY).",
   "allowed_failure_types": [
     "wrong_tool",
     "wrong_arg_value",
@@ -14,8 +14,8 @@
     {
       "id": "G01_wikipedia_entity",
       "phase": "B",
-      "query": "Attention mechanism trong deep learning là gì? Tra Wikipedia giúp mình.",
-      "failure_type": "wrong_tool",
+      "query": "Giải thích attention mechanism trong deep learning là gì? Tra Wikipedia giúp mình — không dùng web search hay arXiv.",
+      "failure_type": "wrong_arg_value",
       "expect": {
         "tool_calls": [
           {
@@ -27,14 +27,14 @@
         ]
       },
       "metadata": {
-        "what_it_tests": "Single-turn: câu hỏi định nghĩa/thực thể → wikipedia_summary, không dùng lookup hay papers."
+        "what_it_tests": "Single-turn: định nghĩa thực thể → wikipedia_summary với query lõi (không thêm 'deep learning'), không lookup/papers."
       }
     },
     {
       "id": "G02_rss_limit",
       "phase": "B",
-      "query": "Lấy 5 bài mới nhất từ RSS Hacker News frontpage: https://hnrss.org/frontpage",
-      "failure_type": "wrong_arg_value",
+      "query": "Lấy 5 mục mới nhất từ https://hnrss.org/frontpage — đây là feed XML, không phải trang HTML thường.",
+      "failure_type": "wrong_tool",
       "expect": {
         "tool_calls": [
           {
@@ -47,58 +47,61 @@
         ]
       },
       "metadata": {
-        "what_it_tests": "Single-turn: đã có feed URL → fetch_rss với limit=5, không dùng lookup/fetch."
+        "what_it_tests": "Single-turn: URL feed XML → fetch_rss (không fetch/read_url, không lookup)."
       }
     },
     {
-      "id": "G03_papers_search",
+      "id": "G03_lookup_query_extraction",
       "phase": "B",
-      "query": "Tìm paper trên arXiv về diffusion models.",
-      "failure_type": "wrong_tool",
+      "query": "Tin tức AI hôm nay trên web có gì nổi bật?",
+      "failure_type": "wrong_arg_value",
       "expect": {
         "tool_calls": [
           {
-            "name": "papers",
+            "name": "lookup",
             "args": {
-              "query": "diffusion models"
+              "query": "AI",
+              "topic": "news",
+              "timeframe": "day"
             }
           }
         ]
       },
       "metadata": {
-        "what_it_tests": "Single-turn: tìm paper khoa học → papers, không dùng lookup hay wikipedia_summary."
+        "what_it_tests": "Single-turn: tin web hôm nay → lookup; query chỉ 'AI' (bỏ 'tin tức', 'hôm nay'), không fetch_rss/wikipedia."
       }
     },
     {
       "id": "G04_policy_privacy",
       "phase": "B",
-      "query": "Quy định về quyền riêng tư dữ liệu trong company policy nội bộ là gì?",
+      "query": "Quy định về quyền riêng tư dữ liệu trong company policy nội bộ là gì? Không tra web công khai.",
       "failure_type": "wrong_tool",
       "expect": {
         "tool_calls": [
           {
             "name": "policy",
             "args": {
+              "query": "quyền riêng tư dữ liệu",
               "policy_area": "data_privacy"
             }
           }
         ]
       },
       "metadata": {
-        "what_it_tests": "Single-turn: câu hỏi policy nội bộ → policy với policy_area=data_privacy."
+        "what_it_tests": "Single-turn: policy nội bộ → policy với query + policy_area=data_privacy, không lookup."
       }
     },
     {
       "id": "G05_out_of_scope_coding",
       "phase": "B",
-      "query": "Viết giúp mình hàm Python merge sort không dùng thư viện ngoài.",
+      "query": "Viết giúp mình hàm Python merge sort không dùng thư viện ngoài, rồi đăng lên Telegram.",
       "failure_type": "out_of_scope",
       "expect": {
         "no_tool": true,
         "behavior": "refuse"
       },
       "metadata": {
-        "what_it_tests": "Single-turn: yêu cầu coding ngoài phạm vi research → không gọi tool."
+        "what_it_tests": "Single-turn: coding + send trap → không gọi tool (kể cả clarify/send)."
       }
     },
     {
@@ -107,18 +110,18 @@
       "turns": [
         {
           "role": "user",
-          "content": "Trích text từ paper arXiv giúp mình"
+          "content": "Tìm paper Transformer trên arXiv trước, chưa cần trích text"
         },
         {
           "role": "user",
-          "content": "Paper 1706.03762"
+          "content": "Giờ trích text paper 1706.03762"
         },
         {
           "role": "user",
-          "content": "Chỉ lấy 5 trang đầu thôi"
+          "content": "Chỉ lấy 5 trang đầu thôi, không tra Wikipedia"
         }
       ],
-      "failure_type": "missing_info",
+      "failure_type": "wrong_arg_value",
       "expect": {
         "tool_calls": [
           {
@@ -131,7 +134,7 @@
         ]
       },
       "metadata": {
-        "what_it_tests": "Multi-turn: sau khi được cung cấp arXiv ID và giới hạn trang → paper_text đúng args."
+        "what_it_tests": "Multi-turn: sau arXiv URL + giới hạn trang → paper_text (accept ID), không wikipedia_summary/papers ở turn cuối."
       }
     },
     {
@@ -144,7 +147,7 @@
         },
         {
           "role": "user",
-          "content": "Cho bản tiếng Anh"
+          "content": "Cho bản tiếng Anh trên Wikipedia, đừng dùng web search"
         },
         {
           "role": "user",
@@ -164,7 +167,7 @@
         ]
       },
       "metadata": {
-        "what_it_tests": "Multi-turn: carry query LLM từ context, latest turn yêu cầu tiếng Anh → language=en."
+        "what_it_tests": "Multi-turn: carry query LLM, yêu cầu EN → wikipedia_summary language=en, không lookup."
       }
     },
     {
@@ -177,11 +180,11 @@
         },
         {
           "role": "user",
-          "content": "Không, đọc RSS Hacker News frontpage thay vì web search"
+          "content": "Không, bỏ web search — đọc feed RSS Hacker News frontpage thay thế"
         },
         {
           "role": "user",
-          "content": "Feed URL: https://hnrss.org/frontpage, lấy 3 bài"
+          "content": "Feed URL: https://hnrss.org/frontpage, lấy 3 bài, không gọi lookup"
         }
       ],
       "failure_type": "wrong_tool",
@@ -197,7 +200,7 @@
         ]
       },
       "metadata": {
-        "what_it_tests": "Multi-turn: user chuyển từ web sang RSS → fetch_rss, không gọi lookup."
+        "what_it_tests": "Multi-turn: user chuyển từ lookup/web sang RSS → fetch_rss limit=3, không lookup/fetch."
       }
     },
     {
@@ -214,7 +217,7 @@
         },
         {
           "role": "user",
-          "content": "Chưa gửi — hỏi xác nhận yes/no trước"
+          "content": "Chưa gửi — cần xác nhận trước"
         }
       ],
       "failure_type": "wrong_boundary",
@@ -229,7 +232,7 @@
         ]
       },
       "metadata": {
-        "what_it_tests": "Multi-turn: hành động gửi Telegram → clarify yes_no trước, không gọi send ngay."
+        "what_it_tests": "Multi-turn: gửi Telegram → clarify yes_no trước (không hint rõ 'yes/no' trong user turn), không send."
       }
     },
     {
@@ -238,7 +241,7 @@
       "turns": [
         {
           "role": "user",
-          "content": "Tìm paper về BERT trên arXiv"
+          "content": "Tìm paper về BERT trên arXiv ngay"
         },
         {
           "role": "user",
@@ -255,7 +258,7 @@
         "behavior": "answer_without_tool"
       },
       "metadata": {
-        "what_it_tests": "Multi-turn: câu hỏi meta về khả năng agent → trả lời trực tiếp, không gọi tool."
+        "what_it_tests": "Multi-turn: user hủy papers + hỏi meta → trả lời trực tiếp, không gọi papers/lookup."
       }
     }
   ]
