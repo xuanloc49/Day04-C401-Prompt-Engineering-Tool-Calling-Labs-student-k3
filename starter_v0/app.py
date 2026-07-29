@@ -25,22 +25,60 @@ load_lab_env(ROOT)
 
 TRANSCRIPTS_DIR = ROOT / "transcripts"
 
-st.set_page_config(page_title="Nghiên Cứu — Research Agent", layout="wide", page_icon="🔎")
+st.set_page_config(page_title="iris — Research Agent", layout="wide", page_icon="🟣")
 
 
 # ==================================================================
-# DESIGN SYSTEM — lấy cảm hứng từ answer-engine UX (Perplexity-style):
-# nền giấy ấm, tiêu đề serif có tính biên tập, badge trích dẫn dạng số,
-# accent teal cho trạng thái "đã có nguồn / đã xác thực".
+# BRAND — "iris": con ngươi mắt (insight/nhìn thấu) + hoa diên vĩ (tím).
+# Mark: 6 cánh gradient tím xoay quanh lõi trắng, gợi ống kính/aperture.
+# ==================================================================
+LOGO_MARK_SVG = """
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" width="{size}" height="{size}">
+  <defs>
+    <linearGradient id="irisGrad{uid}" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A78BFA"/>
+      <stop offset="55%" stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#5B21B6"/>
+    </linearGradient>
+  </defs>
+  <g fill="url(#irisGrad{uid})">
+    <g transform="translate(32,32)">
+      <ellipse cx="0" cy="-13.5" rx="7.2" ry="13.5"/>
+      <ellipse cx="0" cy="-13.5" rx="7.2" ry="13.5" transform="rotate(60)"/>
+      <ellipse cx="0" cy="-13.5" rx="7.2" ry="13.5" transform="rotate(120)"/>
+      <ellipse cx="0" cy="-13.5" rx="7.2" ry="13.5" transform="rotate(180)"/>
+      <ellipse cx="0" cy="-13.5" rx="7.2" ry="13.5" transform="rotate(240)"/>
+      <ellipse cx="0" cy="-13.5" rx="7.2" ry="13.5" transform="rotate(300)"/>
+    </g>
+  </g>
+  <circle cx="32" cy="32" r="9.5" fill="#FFFFFF"/>
+  <circle cx="32" cy="32" r="9.5" fill="none" stroke="url(#irisGrad{uid})" stroke-width="2"/>
+</svg>
+"""
+
+
+def logo_mark(size: int = 40, uid: str = "a") -> str:
+    return LOGO_MARK_SVG.format(size=size, uid=uid)
+
+
+# ==================================================================
+# DESIGN SYSTEM — nền trắng / tím, gradient nhẹ ở card (kiểu answer-engine
+# / dev-platform chuyên nghiệp: You.com, Perplexity, Linear). Tiêu đề vẫn
+# giữ serif biên tập để giữ cảm giác "nghiên cứu", accent chuyển sang tím
+# thương hiệu "iris".
 # ==================================================================
 TOKENS = {
-    "bg": "#FAF8F3",
+    "bg": "#FFFFFF",
     "surface": "#FFFFFF",
-    "border": "#E8E3D8",
-    "text": "#1F1B16",
-    "text_muted": "#6B6459",
-    "accent": "#1F8A82",
-    "accent_soft": "#E4F3F1",
+    "sidebar_bg": "#FBFAFE",
+    "border": "#E7E3F6",
+    "text": "#1A1523",
+    "text_muted": "#6B647A",
+    "accent": "#7C3AED",
+    "accent_dark": "#5B21B6",
+    "accent_soft": "#F1EDFE",
+    "gradient_start": "#EDE9FE",
+    "gradient_end": "#F5F3FF",
     "warn": "#B8860B",
     "error": "#B4432F",
 }
@@ -56,14 +94,38 @@ st.markdown(
     }}
     .stApp {{ background: {TOKENS["bg"]}; }}
     section[data-testid="stSidebar"] {{
-        background: {TOKENS["surface"]};
+        background: {TOKENS["sidebar_bg"]};
         border-right: 1px solid {TOKENS["border"]};
     }}
     #MainMenu, footer, header[data-testid="stHeader"] {{ visibility: hidden; height: 0; }}
 
+    .rt-brand {{
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.2rem 0 1rem 0;
+    }}
+    .rt-brand-name {{
+        font-family: 'Inter', sans-serif;
+        font-weight: 700;
+        font-size: 1.3rem;
+        letter-spacing: -0.02em;
+        color: {TOKENS["text"]};
+    }}
+    .rt-brand-tagline {{
+        font-size: 0.72rem;
+        color: {TOKENS["text_muted"]};
+        margin-top: -0.15rem;
+    }}
+
     .rt-hero {{
         text-align: center;
-        padding: 8vh 0 3rem 0;
+        padding: 7vh 0 3rem 0;
+    }}
+    .rt-hero-mark {{
+        display: flex;
+        justify-content: center;
+        margin-bottom: 1.1rem;
     }}
     .rt-hero h1 {{
         font-family: 'Source Serif 4', serif;
@@ -71,6 +133,9 @@ st.markdown(
         font-size: 2.6rem;
         letter-spacing: -0.01em;
         margin-bottom: 0.4rem;
+        background: linear-gradient(90deg, {TOKENS["text"]} 0%, {TOKENS["accent"]} 120%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
     }}
     .rt-hero p {{
         color: {TOKENS["text_muted"]};
@@ -96,11 +161,16 @@ st.markdown(
     }}
 
     .rt-card {{
-        background: {TOKENS["surface"]};
+        background: linear-gradient(160deg, {TOKENS["gradient_start"]} 0%, {TOKENS["surface"]} 55%);
         border: 1px solid {TOKENS["border"]};
-        border-radius: 10px;
-        padding: 0.7rem 0.85rem;
+        border-radius: 12px;
+        padding: 0.75rem 0.9rem;
         height: 100%;
+        transition: border-color 0.15s ease, transform 0.15s ease;
+    }}
+    .rt-card:hover {{
+        border-color: {TOKENS["accent"]};
+        transform: translateY(-1px);
     }}
     .rt-card-badge {{
         display: inline-flex;
@@ -108,8 +178,8 @@ st.markdown(
         justify-content: center;
         width: 18px; height: 18px;
         border-radius: 50%;
-        background: {TOKENS["accent_soft"]};
-        color: {TOKENS["accent"]};
+        background: {TOKENS["accent"]};
+        color: #FFFFFF;
         font-size: 0.68rem;
         font-weight: 600;
         margin-right: 0.4rem;
@@ -152,7 +222,23 @@ st.markdown(
     div[data-testid="stChatInput"] {{
         border-radius: 14px !important;
         border: 1px solid {TOKENS["border"]} !important;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        box-shadow: 0 1px 3px rgba(124, 58, 237, 0.06);
+    }}
+    div[data-testid="stChatInput"]:focus-within {{
+        border-color: {TOKENS["accent"]} !important;
+        box-shadow: 0 0 0 3px {TOKENS["accent_soft"]} !important;
+    }}
+
+    .stButton button[kind="secondary"], .stButton button {{
+        border-radius: 10px;
+    }}
+    section[data-testid="stSidebar"] .stButton button {{
+        background: {TOKENS["accent"]} !important;
+        color: #FFFFFF !important;
+        border: none !important;
+    }}
+    section[data-testid="stSidebar"] .stButton button:hover {{
+        background: {TOKENS["accent_dark"]} !important;
     }}
 
     .rt-mono, .rt-mono pre {{
@@ -185,9 +271,12 @@ st.markdown(
 
 
 # ------------------------------------------------------------------
-# Sidebar — cấu hình + evidence kỹ thuật (vẫn giữ đủ cho eval/demo)
+# Sidebar — brand + cấu hình + evidence kỹ thuật (vẫn giữ đủ cho eval/demo)
 # ------------------------------------------------------------------
-st.sidebar.markdown("### ⚙️ Cấu hình phiên")
+st.sidebar.markdown("### 🟣 iris")
+st.sidebar.caption("research, in focus")
+
+st.sidebar.markdown("##### ⚙️ Cấu hình phiên")
 
 provider_name = st.sidebar.selectbox(
     "Provider", ["openrouter", "openai", "anthropic", "gemini"], index=0
@@ -200,7 +289,7 @@ max_tool_rounds = st.sidebar.slider("Max tool rounds", 1, 8, 4)
 system_prompt_path = ARTIFACTS_DIR / "system_prompt.md"
 tools_path = ARTIFACTS_DIR / "tools.yaml"
 
-if st.sidebar.button("🔄 Bắt đầu phiên mới", use_container_width=True):
+if st.sidebar.button("🔄 Bắt đầu phiên mới"):
     st.session_state.clear()
     st.rerun()
 
@@ -291,25 +380,31 @@ def collect_sources(round_records: list[dict]) -> list[dict]:
 def render_source_cards(sources: list[dict]) -> None:
     if not sources:
         return
-    st.markdown('<div class="rt-sources-label">Nguồn</div>', unsafe_allow_html=True)
+    st.caption("Nguồn")
     cols = st.columns(min(4, len(sources)))
     for idx, src in enumerate(sources):
         with cols[idx % len(cols)]:
             title = (src["title"] or "")[:90]
-            link_open = f'<a href="{src["url"]}" target="_blank" style="text-decoration:none;color:inherit;">' if src["url"] else "<div>"
-            link_close = "</a>" if src["url"] else "</div>"
-            st.markdown(
-                f"""
-                <div class="rt-card">
-                  {link_open}
-                    <span class="rt-card-badge">{idx + 1}</span>
-                    <span class="rt-card-domain">{src["source"]}</span>
-                    <div class="rt-card-title">{title}</div>
-                  {link_close}
-                </div>
-                """,
-                unsafe_allow_html=True,
-            )
+            container = st.container(border=True)
+            with container:
+                st.markdown(f"**{idx + 1}. {src['source']}**")
+                if src.get("url"):
+                    st.link_button("Xem nguồn", src["url"])
+                else:
+                    st.write(title)
+
+
+def collect_tool_errors(round_records: list[dict]) -> list[str]:
+    """README: 'tool_results có error phải được review thủ công; PASS routing
+    không có nghĩa tool chạy đúng.' Banner này bắt buộc phải hiện ngay, không
+    được giấu trong expander, để không ai bỏ sót lỗi thực thi tool."""
+    errors: list[str] = []
+    for rr in round_records:
+        for event in rr.get("tool_results", []):
+            result = event.get("result") or {}
+            if isinstance(result, dict) and result.get("error"):
+                errors.append(f"`{event.get('tool')}` → {result.get('error')}: {result.get('message', '')}")
+    return errors
 
 
 def render_technical_panel(turn: dict) -> None:
@@ -338,33 +433,40 @@ FOLLOWUPS = [
 
 
 def render_turn(turn: dict, key_prefix: str) -> None:
-    st.markdown(f'<div class="rt-query">{turn["user"]}</div>', unsafe_allow_html=True)
+    with st.chat_message("user"):
+        st.markdown(turn.get("user") or "")
 
     sources = collect_sources(turn.get("rounds", []))
-    render_source_cards(sources)
+    if sources:
+        render_source_cards(sources)
 
-    st.markdown(f'<div class="rt-answer">{turn.get("assistant_text") or ""}</div>', unsafe_allow_html=True)
+    with st.chat_message("assistant"):
+        st.markdown(turn.get("assistant_text") or "")
+
+    tool_errors = collect_tool_errors(turn.get("rounds", []))
+    if tool_errors:
+        st.warning("Tool routing đúng nhưng thực thi lỗi — cần review thủ công")
+        for err in tool_errors:
+            st.caption(f"🔴 {err}")
 
     status = turn.get("status")
     if status == "waiting_for_user":
-        st.markdown('<span class="rt-status-pill rt-status-wait">⏸️ Đang chờ bạn bổ sung thông tin</span>', unsafe_allow_html=True)
+        st.info("⏸️ Đang chờ bạn bổ sung thông tin")
     elif status == "provider_error":
-        st.markdown(f'<span class="rt-status-pill rt-status-error">❌ Provider error: {turn.get("error")}</span>', unsafe_allow_html=True)
+        st.error(f"❌ Provider error: {turn.get('error')}")
     elif status == "max_tool_rounds":
-        st.markdown('<span class="rt-status-pill rt-status-wait">⏹️ Dừng vì chạm giới hạn tool rounds</span>', unsafe_allow_html=True)
+        st.info("⏹️ Dừng vì chạm giới hạn tool rounds")
 
     render_technical_panel(turn)
 
-    st.markdown('<div class="rt-followup">', unsafe_allow_html=True)
     cols = st.columns(len(FOLLOWUPS))
     for i, suggestion in enumerate(FOLLOWUPS):
         with cols[i]:
             if st.button(suggestion, key=f"{key_prefix}-fu-{i}"):
                 st.session_state.pending_prompt = suggestion
                 st.rerun()
-    st.markdown("</div>", unsafe_allow_html=True)
 
-    st.markdown('<hr class="rt-divider">', unsafe_allow_html=True)
+    st.markdown("---")
 
 
 def process_turn(user_text: str) -> None:
@@ -427,10 +529,11 @@ main_col = st.columns([1, 6, 1])[1]
 with main_col:
     if not st.session_state.turns:
         st.markdown(
-            """
+            f"""
             <div class="rt-hero">
-                <h1>🔎 Hỏi bất cứ điều gì</h1>
-                <p>Research Agent tra cứu web, mạng xã hội và tài liệu để trả lời có nguồn trích dẫn.</p>
+                <div class="rt-hero-mark">{logo_mark(56, uid="hero")}</div>
+                <h1>Hỏi bất cứ điều gì</h1>
+                <p>iris tra cứu web, mạng xã hội và tài liệu để trả lời có nguồn trích dẫn rõ ràng.</p>
             </div>
             """,
             unsafe_allow_html=True,
