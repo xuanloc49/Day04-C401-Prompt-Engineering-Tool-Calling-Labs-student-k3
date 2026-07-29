@@ -116,3 +116,21 @@ tools:
         max_pages: {type: integer, default: 5, description: "Số trang"}
         max_chars: {type: integer, default: 8000, description: "Số ký tự"}
       required: [arxiv_url]
+
+  - name: wikipedia_summary
+    description: "Tra cứu định nghĩa hoặc tóm tắt của một từ khóa/thực thể trên Wikipedia."
+    parameters:
+      type: object
+      properties:
+        query: {type: string, default: "", description: "Từ khóa tra cứu"}
+        language: {type: string, enum: [vi, en], default: "vi", description: "Ngôn ngữ"}
+      required: [query]
+
+  - name: fetch_rss
+    description: "Đọc danh sách tin tức/bài báo mới nhất từ đường dẫn RSS/Atom Feed."
+    parameters:
+      type: object
+      properties:
+        feed_url: {type: string, default: "", description: "Đường dẫn RSS Feed"}
+        limit: {type: integer, default: 5, description: "Số bài viết tối đa cần lấy"}
+      required: [feed_url]
