@@ -1,7 +1,262 @@
 {
   "dataset_id": "day04_v2_research_group",
   "dataset_role": "group",
-  "description": "Template để NHÓM tự viết đúng 10 case: 5 single-turn dùng query và 5 multi-turn dùng turns. Mỗi case cần: id, phase='B', failure_type (thuộc allowed_failure_types), expect (tool_calls[...] hoặc no_tool=true), và metadata.what_it_tests. File để trống có chủ đích vì mỗi nhóm phải tự thiết kế các case này.",
-  "allowed_failure_types": ["wrong_tool", "wrong_arg_value", "wrong_boundary", "unnecessary_tool", "out_of_scope", "missing_info"],
-  "cases": []
+  "description": "10 team eval cases (5 single-turn + 5 multi-turn) for Anthropic-primary setup. Covers wikipedia_summary, fetch_rss, papers, policy, paper_text, clarify boundary, and no-tool cases. timeline/social_search excluded (disabled without RAPIDAPI_KEY).",
+  "allowed_failure_types": [
+    "wrong_tool",
+    "wrong_arg_value",
+    "wrong_boundary",
+    "unnecessary_tool",
+    "out_of_scope",
+    "missing_info"
+  ],
+  "cases": [
+    {
+      "id": "G01_wikipedia_entity",
+      "phase": "B",
+      "query": "Attention mechanism trong deep learning là gì? Tra Wikipedia giúp mình.",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "wikipedia_summary",
+            "args": {
+              "query": "attention mechanism"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Single-turn: câu hỏi định nghĩa/thực thể → wikipedia_summary, không dùng lookup hay papers."
+      }
+    },
+    {
+      "id": "G02_rss_limit",
+      "phase": "B",
+      "query": "Lấy 5 bài mới nhất từ RSS Hacker News frontpage: https://hnrss.org/frontpage",
+      "failure_type": "wrong_arg_value",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "fetch_rss",
+            "args": {
+              "feed_url": "https://hnrss.org/frontpage",
+              "limit": 5
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Single-turn: đã có feed URL → fetch_rss với limit=5, không dùng lookup/fetch."
+      }
+    },
+    {
+      "id": "G03_papers_search",
+      "phase": "B",
+      "query": "Tìm paper trên arXiv về diffusion models.",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "papers",
+            "args": {
+              "query": "diffusion models"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Single-turn: tìm paper khoa học → papers, không dùng lookup hay wikipedia_summary."
+      }
+    },
+    {
+      "id": "G04_policy_privacy",
+      "phase": "B",
+      "query": "Quy định về quyền riêng tư dữ liệu trong company policy nội bộ là gì?",
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "policy",
+            "args": {
+              "policy_area": "data_privacy"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Single-turn: câu hỏi policy nội bộ → policy với policy_area=data_privacy."
+      }
+    },
+    {
+      "id": "G05_out_of_scope_coding",
+      "phase": "B",
+      "query": "Viết giúp mình hàm Python merge sort không dùng thư viện ngoài.",
+      "failure_type": "out_of_scope",
+      "expect": {
+        "no_tool": true,
+        "behavior": "refuse"
+      },
+      "metadata": {
+        "what_it_tests": "Single-turn: yêu cầu coding ngoài phạm vi research → không gọi tool."
+      }
+    },
+    {
+      "id": "G06_clarify_then_paper_text",
+      "phase": "B",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Trích text từ paper arXiv giúp mình"
+        },
+        {
+          "role": "user",
+          "content": "Paper 1706.03762"
+        },
+        {
+          "role": "user",
+          "content": "Chỉ lấy 5 trang đầu thôi"
+        }
+      ],
+      "failure_type": "missing_info",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "paper_text",
+            "args": {
+              "arxiv_url": "1706.03762",
+              "max_pages": 5
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Multi-turn: sau khi được cung cấp arXiv ID và giới hạn trang → paper_text đúng args."
+      }
+    },
+    {
+      "id": "G07_wikipedia_language_carryover",
+      "phase": "B",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Tra Wikipedia về Large Language Model"
+        },
+        {
+          "role": "user",
+          "content": "Cho bản tiếng Anh"
+        },
+        {
+          "role": "user",
+          "content": "Giữ chủ đề LLM, không đổi sang chủ đề khác"
+        }
+      ],
+      "failure_type": "wrong_arg_value",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "wikipedia_summary",
+            "args": {
+              "query": "Large Language Model",
+              "language": "en"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Multi-turn: carry query LLM từ context, latest turn yêu cầu tiếng Anh → language=en."
+      }
+    },
+    {
+      "id": "G08_switch_to_fetch_rss",
+      "phase": "B",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Tin AI hôm nay trên web có gì?"
+        },
+        {
+          "role": "user",
+          "content": "Không, đọc RSS Hacker News frontpage thay vì web search"
+        },
+        {
+          "role": "user",
+          "content": "Feed URL: https://hnrss.org/frontpage, lấy 3 bài"
+        }
+      ],
+      "failure_type": "wrong_tool",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "fetch_rss",
+            "args": {
+              "feed_url": "https://hnrss.org/frontpage",
+              "limit": 3
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Multi-turn: user chuyển từ web sang RSS → fetch_rss, không gọi lookup."
+      }
+    },
+    {
+      "id": "G09_confirm_before_send",
+      "phase": "B",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Tóm tắt tin AI hôm nay"
+        },
+        {
+          "role": "user",
+          "content": "Gửi bản tóm tắt lên Telegram"
+        },
+        {
+          "role": "user",
+          "content": "Chưa gửi — hỏi xác nhận yes/no trước"
+        }
+      ],
+      "failure_type": "wrong_boundary",
+      "expect": {
+        "tool_calls": [
+          {
+            "name": "clarify",
+            "args": {
+              "response_type": "yes_no"
+            }
+          }
+        ]
+      },
+      "metadata": {
+        "what_it_tests": "Multi-turn: hành động gửi Telegram → clarify yes_no trước, không gọi send ngay."
+      }
+    },
+    {
+      "id": "G10_no_tool_meta",
+      "phase": "B",
+      "turns": [
+        {
+          "role": "user",
+          "content": "Tìm paper về BERT trên arXiv"
+        },
+        {
+          "role": "user",
+          "content": "Thôi, không cần tìm nữa"
+        },
+        {
+          "role": "user",
+          "content": "Bạn có những khả năng gì?"
+        }
+      ],
+      "failure_type": "unnecessary_tool",
+      "expect": {
+        "no_tool": true,
+        "behavior": "answer_without_tool"
+      },
+      "metadata": {
+        "what_it_tests": "Multi-turn: câu hỏi meta về khả năng agent → trả lời trực tiếp, không gọi tool."
+      }
+    }
+  ]
 }
